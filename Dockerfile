@@ -2,33 +2,28 @@ FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
-RUN apt-get update && apt-get install -y \
+# Install Chromium + required libs (Alpine)
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
   ca-certificates \
-  fonts-liberation \
-  libasound2 \
-  libatk-bridge2.0-0 \
-  libatk1.0-0 \
-  libcups2 \
-  libdbus-1-3 \
-  libdrm2 \
-  libgbm1 \
-  libgtk-3-0 \
-  libnss3 \
-  libpangocairo-1.0-0 \
-  libx11-xcb1 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxfixes3 \
-  libxkbcommon0 \
-  libxrandr2 \
-  xdg-utils \
-  && rm -rf /var/lib/apt/lists/*
+  ttf-freefont \
+  font-noto \
+  libstdc++ \
+  udev
 
+# Tell Playwright to NOT download its own Chromium (we use system Chromium)
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 RUN mkdir -p /home/node/.cache/ms-playwright \
   && chown -R node:node /home/node/.cache/ms-playwright
 
 USER node
 
-RUN npx --yes playwright@latest install chromium
+# Install Playwright (library only) so your node can require it
+RUN npm_config_loglevel=warn npm i -g playwright@latest
